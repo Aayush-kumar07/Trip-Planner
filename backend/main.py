@@ -6,6 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from os import environ
 from langchain.schema import SystemMessage
 from langchain_openai import AzureChatOpenAI
+from langchain_community.callbacks import get_openai_callback
+from database.config import database_connection
+from datetime import datetime
 
 environ["AZURE_OPENAI_ENDPOINT"]="aPI_ENDPOINT"
 environ["AZURE_OPENAI_API_KEY"]="API_KEY"
@@ -30,6 +33,8 @@ def get_city(data):
 def get_info(data):
     info=data["destinationType"]
     return info
+def get_current_datetime():
+    return datetime.now().strftime("%Y-%M-%d %H:%M:%S")
 
 @app.post("api/destination")
 async def create_destination(destination: Destination):
@@ -47,7 +52,11 @@ async def create_destination(destination: Destination):
     messages = [
     SystemMessage(content=SYSTEM_PROMPT),
     ]
-    response=(chat_model.invoke(messages))
+    with get_openai_callback() as cb:
+        response=(chat_model.invoke(messages))
+    current_datetime=get_current_datetime()
+
+    await database_connection(cb,city,info,current_datetime)
     return JSONResponse(response.content)
 
 

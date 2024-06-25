@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+langchain
+pydantic
+langchain_openai
+langchain_community
+cors
+motor
+
